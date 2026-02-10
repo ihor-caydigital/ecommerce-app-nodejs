@@ -32,13 +32,22 @@ exports.getProduct = (req, res, next) => {
 };
 
 exports.getIndex = (req, res, next) => {
-  Product.findAll()
+  const category = req.query.category;
+  const allowedCategories = ['Fruits', 'Vegetables', 'Other'];
+  let whereClause = {};
+  
+  if (category && category !== 'All' && allowedCategories.includes(category)) {
+    whereClause = { productCategory: category };
+  }
+  
+  Product.findAll({ where: whereClause })
     .then((products) => {
       res.render("shop/index", {
         prods: products,
         pageTitle: "Shop",
         path: "/",
         hasProducts: products.length > 0,
+        selectedCategory: category || 'All',
       });
     })
     .catch((error) => {
