@@ -33,9 +33,10 @@ exports.getProduct = (req, res, next) => {
 
 exports.getIndex = (req, res, next) => {
   const category = req.query.category;
+  const allowedCategories = ['Fruits', 'Vegetables', 'Other'];
   let whereClause = {};
   
-  if (category && category !== 'All') {
+  if (category && category !== 'All' && allowedCategories.includes(category)) {
     whereClause = { productCategory: category };
   }
   

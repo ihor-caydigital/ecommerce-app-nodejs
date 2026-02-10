@@ -29,7 +29,7 @@
                 <select name="productCategory" id="productCategory">
                     <option value="Fruits" <% if (editing && product.productCategory === 'Fruits') { %>selected<% } %>>Fruits</option>
                     <option value="Vegetables" <% if (editing && product.productCategory === 'Vegetables') { %>selected<% } %>>Vegetables</option>
-                    <option value="Other" <% if (editing && product.productCategory === 'Other') { %>selected<% } else if (!editing) { %>selected<% } %>>Other</option>
+                    <option value="Other" <% if (!editing || product.productCategory === 'Other') { %>selected<% } %>>Other</option>
                 </select>
             </div>
             <% if (editing) { %>
