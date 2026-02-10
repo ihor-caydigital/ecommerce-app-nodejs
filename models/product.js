@@ -22,6 +22,11 @@ const Product = sequelize.define("product", {
     type: Sequelize.STRING,
     allowNull: false,
   },
+  productCategory: {
+    type: Sequelize.STRING,
+    allowNull: false,
+    defaultValue: 'Other',
+  },
 });
 
 module.exports = Product;

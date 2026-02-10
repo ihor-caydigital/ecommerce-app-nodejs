@@ -37,12 +37,14 @@ exports.postAddProduct = (req, res, next) => {
   const imageUrl = req.body.imageUrl;
   const description = req.body.description;
   const price = req.body.price;
+  const productCategory = req.body.productCategory;
   req.user
     .createProduct({
       title: title,
       price: price,
       imageUrl: imageUrl,
       description: description,
+      productCategory: productCategory,
     })
     .then((result) => {
       console.log("Product Created");
@@ -62,6 +64,7 @@ exports.postEditProduct = (req, res, next) => {
       product.imageUrl = req.body.imageUrl;
       product.description = req.body.description;
       product.price = req.body.price;
+      product.productCategory = req.body.productCategory;
       return product.save();
     })
     .then((result) => {

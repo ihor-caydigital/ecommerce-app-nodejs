@@ -6,6 +6,17 @@
     <%- include('../includes/navigation.ejs') %>
 
     <main>
+        <div class="centered" style="margin-bottom: 2rem;">
+            <form action="/" method="GET">
+                <label for="category">Filter by Category: </label>
+                <select name="category" id="category" onchange="this.form.submit()">
+                    <option value="All" <%= selectedCategory === 'All' ? 'selected' : '' %>>All</option>
+                    <option value="Fruits" <%= selectedCategory === 'Fruits' ? 'selected' : '' %>>Fruits</option>
+                    <option value="Vegetables" <%= selectedCategory === 'Vegetables' ? 'selected' : '' %>>Vegetables</option>
+                    <option value="Other" <%= selectedCategory === 'Other' ? 'selected' : '' %>>Other</option>
+                </select>
+            </form>
+        </div>
         <% if (prods.length > 0) { %>
             <div class="grid">
                 <% for (let product of prods) { %>
