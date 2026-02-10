@@ -25,3 +25,7 @@
 .product__description {
   text-align: center;
 }
+
+.product-filter {
+  margin-bottom: 2rem;
+}
