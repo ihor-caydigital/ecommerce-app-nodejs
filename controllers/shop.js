@@ -127,7 +127,7 @@ exports.postUpdateCartQuantity = (req, res, next) => {
   req.user.getCart()
     .then(cart => {
       fetchedCart = cart;
-      return cart.getProducts({ where: { id: productId } })
+      return cart.getProducts({ where: { id: productId } });
     })
     .then(products => {
       if (products.length === 0) {

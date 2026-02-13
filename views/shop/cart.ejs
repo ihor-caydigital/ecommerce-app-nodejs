@@ -11,13 +11,13 @@
                         <li class="cart__item">
                             <h1><%= p.title %></h1>
                             <div class="cart__item-quantity">
-                                <form action="/cart-update-quantity" method="POST" style="display: inline;">
+                                <form action="/cart-update-quantity" method="POST" class="inline-form">
                                     <input type="hidden" value="<%= p.id %>" name="productId">
                                     <input type="hidden" value="decrease" name="action">
                                     <button class="btn-quantity" type="submit">−</button>
                                 </form>
                                 <span class="quantity-value"><%= p.cartItem.quantity %></span>
-                                <form action="/cart-update-quantity" method="POST" style="display: inline;">
+                                <form action="/cart-update-quantity" method="POST" class="inline-form">
                                     <input type="hidden" value="<%= p.id %>" name="productId">
                                     <input type="hidden" value="increase" name="action">
                                     <button class="btn-quantity" type="submit">+</button>

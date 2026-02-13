@@ -56,5 +56,9 @@
     min-width: 2rem;
     text-align: center;
   }
+
+  .inline-form {
+    display: inline;
+  }
   
   
