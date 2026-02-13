@@ -21,5 +21,40 @@
     font-size: 1.2rem;
     margin: 0;
   }
+
+  .cart__item-quantity {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .btn-quantity {
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid #3b0062;
+    background: white;
+    color: #3b0062;
+    cursor: pointer;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .btn-quantity:hover,
+  .btn-quantity:active {
+    background: #3b0062;
+    color: white;
+  }
+
+  .quantity-value {
+    font-weight: bold;
+    font-size: 1rem;
+    min-width: 2rem;
+    text-align: center;
+  }
   
   

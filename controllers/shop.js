@@ -119,6 +119,48 @@ exports.postCartDeleteProduct = (req, res, next) => {
     .catch(error => console.log(error));
 };
 
+exports.postUpdateCartQuantity = (req, res, next) => {
+  const productId = req.body.productId;
+  const action = req.body.action; // 'increase' or 'decrease'
+  let fetchedCart;
+
+  req.user.getCart()
+    .then(cart => {
+      fetchedCart = cart;
+      return cart.getProducts({ where: { id: productId } })
+    })
+    .then(products => {
+      if (products.length === 0) {
+        return res.redirect("/cart");
+      }
+      const product = products[0];
+      let newQuantity = product.cartItem.quantity;
+      
+      if (action === 'increase') {
+        newQuantity += 1;
+      } else if (action === 'decrease') {
+        newQuantity -= 1;
+      }
+      
+      // Validation: prevent negative or zero quantity
+      if (newQuantity <= 0) {
+        // If quantity becomes 0 or less, remove the item
+        return product.cartItem.destroy()
+          .then(() => res.redirect("/cart"));
+      }
+      
+      // Update the quantity
+      return fetchedCart.addProduct(product, {
+        through: { quantity: newQuantity }
+      })
+        .then(() => res.redirect("/cart"));
+    })
+    .catch(error => {
+      console.log(error);
+      res.redirect("/cart");
+    });
+};
+
 exports.getOrders = (req, res, next) => {
   req.user
     .getOrders({include: ['products']})

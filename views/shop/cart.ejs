@@ -10,7 +10,19 @@
                     <% products.forEach(p => { %>
                         <li class="cart__item">
                             <h1><%= p.title %></h1>
-                            <h2>Quantity: <%= p.cartItem.quantity %></h2>
+                            <div class="cart__item-quantity">
+                                <form action="/cart-update-quantity" method="POST" style="display: inline;">
+                                    <input type="hidden" value="<%= p.id %>" name="productId">
+                                    <input type="hidden" value="decrease" name="action">
+                                    <button class="btn-quantity" type="submit">−</button>
+                                </form>
+                                <span class="quantity-value"><%= p.cartItem.quantity %></span>
+                                <form action="/cart-update-quantity" method="POST" style="display: inline;">
+                                    <input type="hidden" value="<%= p.id %>" name="productId">
+                                    <input type="hidden" value="increase" name="action">
+                                    <button class="btn-quantity" type="submit">+</button>
+                                </form>
+                            </div>
                             <form action="/cart-delete-item" method="POST">
                                 <input type="hidden" value="<%= p.id %>" name="productId">
                                 <button class="btn danger" type="submit">Delete</button>
