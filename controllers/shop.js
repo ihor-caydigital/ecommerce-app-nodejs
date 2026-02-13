@@ -124,6 +124,12 @@ exports.postUpdateCartQuantity = (req, res, next) => {
   const action = req.body.action; // 'increase' or 'decrease'
   let fetchedCart;
 
+  // Validate action parameter
+  if (action !== 'increase' && action !== 'decrease') {
+    console.log('Invalid action provided:', action);
+    return res.redirect("/cart");
+  }
+
   req.user.getCart()
     .then(cart => {
       fetchedCart = cart;

@@ -14,13 +14,13 @@
                                 <form action="/cart-update-quantity" method="POST" class="inline-form">
                                     <input type="hidden" value="<%= p.id %>" name="productId">
                                     <input type="hidden" value="decrease" name="action">
-                                    <button class="btn-quantity" type="submit">−</button>
+                                    <button class="btn-quantity" type="submit" aria-label="Decrease quantity">−</button>
                                 </form>
                                 <span class="quantity-value"><%= p.cartItem.quantity %></span>
                                 <form action="/cart-update-quantity" method="POST" class="inline-form">
                                     <input type="hidden" value="<%= p.id %>" name="productId">
                                     <input type="hidden" value="increase" name="action">
-                                    <button class="btn-quantity" type="submit">+</button>
+                                    <button class="btn-quantity" type="submit" aria-label="Increase quantity">+</button>
                                 </form>
                             </div>
                             <form action="/cart-delete-item" method="POST">
