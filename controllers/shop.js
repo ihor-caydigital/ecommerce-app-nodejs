@@ -60,10 +60,13 @@ exports.getCart = (req, res, next) => {
     .then(cart => {
       return cart.getProducts()
         .then(products => {
+          // Calculate cart total
+          const cartTotal = products.reduce((sum, p) => sum + (p.price * p.cartItem.quantity), 0);
           res.render("shop/cart", {
             pageTitle: "Cart",
             path: "/shop/cart",
             products: products,
+            cartTotal: cartTotal.toFixed(2)
           });
         })
     })
@@ -156,7 +159,7 @@ exports.postCartUpdateQuantity = (req, res, next) => {
       .then(() => res.redirect("/cart"));
     })
     .catch(error => {
-      console.log('Error in postCartUpdateQuantity:', error);
+      console.log('Error updating cart quantity for product', productId, 'action:', action, error);
       res.redirect("/cart");
     });
 };
