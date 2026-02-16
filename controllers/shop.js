@@ -60,10 +60,13 @@ exports.getCart = (req, res, next) => {
     .then(cart => {
       return cart.getProducts()
         .then(products => {
+          // Calculate cart total
+          const cartTotal = products.reduce((sum, p) => sum + (p.price * p.cartItem.quantity), 0);
           res.render("shop/cart", {
             pageTitle: "Cart",
             path: "/shop/cart",
             products: products,
+            cartTotal: cartTotal.toFixed(2)
           });
         })
     })
@@ -117,6 +120,48 @@ exports.postCartDeleteProduct = (req, res, next) => {
       res.redirect("/cart");
     })
     .catch(error => console.log(error));
+};
+
+exports.postCartUpdateQuantity = (req, res, next) => {
+  const productId = req.body.productId;
+  const action = req.body.action; // 'increase' or 'decrease'
+  let fetchedCart;
+
+  req.user.getCart()
+    .then(cart => {
+      fetchedCart = cart;
+      return cart.getProducts({ where: { id: productId } });
+    })
+    .then(products => {
+      if (products.length === 0) {
+        return res.redirect("/cart");
+      }
+      const product = products[0];
+      let currentQuantity = product.cartItem.quantity;
+      let newQuantity = currentQuantity;
+
+      if (action === 'increase') {
+        newQuantity = currentQuantity + 1;
+      } else if (action === 'decrease') {
+        newQuantity = currentQuantity - 1;
+      }
+
+      // If quantity is 0 or less, remove the item
+      if (newQuantity <= 0) {
+        return product.cartItem.destroy()
+          .then(() => res.redirect("/cart"));
+      }
+
+      // Update quantity
+      return fetchedCart.addProduct(product, {
+        through: { quantity: newQuantity }
+      })
+      .then(() => res.redirect("/cart"));
+    })
+    .catch(error => {
+      console.log('Error updating cart quantity for product', productId, 'action:', action, error);
+      res.redirect("/cart");
+    });
 };
 
 exports.getOrders = (req, res, next) => {
