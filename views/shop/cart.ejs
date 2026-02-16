@@ -9,16 +9,39 @@
                 <ul class="cart__item-list">
                     <% products.forEach(p => { %>
                         <li class="cart__item">
-                            <h1><%= p.title %></h1>
-                            <h2>Quantity: <%= p.cartItem.quantity %></h2>
-                            <form action="/cart-delete-item" method="POST">
-                                <input type="hidden" value="<%= p.id %>" name="productId">
-                                <button class="btn danger" type="submit">Delete</button>
-                            </form>
+                            <div class="cart__item-info">
+                                <h1><%= p.title %></h1>
+                                <h2>Price: $<%= p.price %></h2>
+                            </div>
+                            <div class="cart__item-controls">
+                                <div class="quantity-controls">
+                                    <form action="/cart-update-quantity" method="POST">
+                                        <input type="hidden" value="<%= p.id %>" name="productId">
+                                        <input type="hidden" value="decrease" name="action">
+                                        <button class="btn-quantity" type="submit">-</button>
+                                    </form>
+                                    <span class="quantity-display"><%= p.cartItem.quantity %></span>
+                                    <form action="/cart-update-quantity" method="POST">
+                                        <input type="hidden" value="<%= p.id %>" name="productId">
+                                        <input type="hidden" value="increase" name="action">
+                                        <button class="btn-quantity" type="submit">+</button>
+                                    </form>
+                                </div>
+                                <div class="item-subtotal">
+                                    Subtotal: $<%= (p.price * p.cartItem.quantity).toFixed(2) %>
+                                </div>
+                                <form action="/cart-delete-item" method="POST">
+                                    <input type="hidden" value="<%= p.id %>" name="productId">
+                                    <button class="btn danger" type="submit">Delete</button>
+                                </form>
+                            </div>
                         </li>
                     <% }) %>
                 </ul>
                 <hr>
+                <div class="cart-total">
+                    <h2>Total: $<%= products.reduce((sum, p) => sum + (p.price * p.cartItem.quantity), 0).toFixed(2) %></h2>
+                </div>
                 <div class="centered">
                     <form action="/create-order" method="POST">
                         <button type="submit" class="btn">Order Now!</button> 
