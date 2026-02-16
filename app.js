@@ -10,6 +10,7 @@ const Cart = require("./models/cart");
 const CartItem = require("./models/cart-item");
 const Order = require("./models/order");
 const OrderItem = require("./models/order-item");
+const Coupon = require("./models/coupon");
 // const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
@@ -58,6 +59,9 @@ User.hasMany(Product);
 // One direction is enough
 User.hasOne(Cart);
 Cart.belongsTo(User);
+
+// Cart-Coupon relationship
+Cart.belongsTo(Coupon, { foreignKey: 'couponId', as: 'coupon' });
 
 // One direction is enough
 Cart.belongsToMany(Product, { through: CartItem })
