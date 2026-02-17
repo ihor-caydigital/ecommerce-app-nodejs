@@ -37,8 +37,14 @@ app.use(morgan('combined', {stream: accessLogStream}));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
+// Session configuration
+if (!process.env.SESSION_SECRET && process.env.NODE_ENV === 'production') {
+  console.error('FATAL ERROR: SESSION_SECRET is not defined in production environment.');
+  process.exit(1);
+}
+
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'my-secret-key-for-sessions',
+  secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
   resave: false,
   saveUninitialized: false
 }));

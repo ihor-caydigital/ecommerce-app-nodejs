@@ -4,6 +4,19 @@ const Coupon = require("../models/coupon");
 
 const ERROR_PREFIX = "In shop controller, ";
 
+// Helper function to calculate discount based on coupon
+const calculateDiscount = (subtotal, appliedCoupon) => {
+  let discount = 0;
+  if (appliedCoupon) {
+    if (appliedCoupon.discountType === 'percentage') {
+      discount = (subtotal * appliedCoupon.discountValue) / 100;
+    } else if (appliedCoupon.discountType === 'fixed') {
+      discount = appliedCoupon.discountValue;
+    }
+  }
+  return discount;
+};
+
 exports.getProducts = (req, res, next) => {
   Product.findAll()
     .then((products) => {
@@ -60,11 +73,18 @@ exports.getCart = (req, res, next) => {
   let fetchedCart;
   let appliedCoupon = null;
   
-  req.user.getCart({ include: [{ model: Coupon, as: 'appliedCoupon' }] })
+  req.user.getCart()
     .then(cart => {
       fetchedCart = cart;
-      appliedCoupon = cart.appliedCoupon;
-      return cart.getProducts();
+      // Fetch applied coupon if exists
+      if (cart.appliedCouponId) {
+        return Coupon.findByPk(cart.appliedCouponId);
+      }
+      return null;
+    })
+    .then(coupon => {
+      appliedCoupon = coupon;
+      return fetchedCart.getProducts();
     })
     .then(products => {
       // Calculate subtotal
@@ -72,15 +92,8 @@ exports.getCart = (req, res, next) => {
         return sum + (p.price * p.cartItem.quantity);
       }, 0);
       
-      // Calculate discount
-      let discount = 0;
-      if (appliedCoupon) {
-        if (appliedCoupon.discountType === 'percentage') {
-          discount = (subtotal * appliedCoupon.discountValue) / 100;
-        } else if (appliedCoupon.discountType === 'fixed') {
-          discount = appliedCoupon.discountValue;
-        }
-      }
+      // Calculate discount using helper function
+      const discount = calculateDiscount(subtotal, appliedCoupon);
       
       // Calculate total
       const total = Math.max(0, subtotal - discount);
@@ -175,11 +188,18 @@ exports.postOrder = (req, res, next) => {
   let discountAmount = 0;
   
   req.user
-    .getCart({ include: [{ model: Coupon, as: 'appliedCoupon' }] })
+    .getCart()
     .then(cart => {
       fetchedCart = cart;
-      appliedCoupon = cart.appliedCoupon;
-      return cart.getProducts();
+      // Fetch applied coupon if exists
+      if (cart.appliedCouponId) {
+        return Coupon.findByPk(cart.appliedCouponId);
+      }
+      return null;
+    })
+    .then(coupon => {
+      appliedCoupon = coupon;
+      return fetchedCart.getProducts();
     })
     .then(products => {
       // Calculate subtotal
@@ -187,14 +207,8 @@ exports.postOrder = (req, res, next) => {
         return sum + (p.price * p.cartItem.quantity);
       }, 0);
       
-      // Calculate discount
-      if (appliedCoupon) {
-        if (appliedCoupon.discountType === 'percentage') {
-          discountAmount = (subtotal * appliedCoupon.discountValue) / 100;
-        } else if (appliedCoupon.discountType === 'fixed') {
-          discountAmount = appliedCoupon.discountValue;
-        }
-      }
+      // Calculate discount using helper function
+      discountAmount = calculateDiscount(subtotal, appliedCoupon);
       
       const totalAmount = Math.max(0, subtotal - discountAmount);
       
