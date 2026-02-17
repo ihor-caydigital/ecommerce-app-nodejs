@@ -20,6 +20,10 @@ router.post("/cart", shopController.postCart);
 
 router.post("/cart-delete-item", shopController.postCartDeleteProduct);
 
+router.post("/apply-coupon", shopController.postApplyCoupon);
+
+router.post("/remove-coupon", shopController.postRemoveCoupon);
+
 router.post("/create-order", shopController.postOrder);
 
 router.get("/orders", shopController.getOrders);
