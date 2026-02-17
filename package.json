@@ -22,6 +22,7 @@
     "ejs": "^2.6.1",
     "express": "^4.16.3",
     "express-handlebars": "^3.0.0",
+    "express-session": "^1.19.0",
     "helmet": "^7.1.0",
     "morgan": "^1.10.0",
     "mysql2": "^3.9.7",

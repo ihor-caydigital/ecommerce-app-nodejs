@@ -10,7 +10,9 @@
                     <% products.forEach(p => { %>
                         <li class="cart__item">
                             <h1><%= p.title %></h1>
+                            <h2>Price: $<%= p.price.toFixed(2) %></h2>
                             <h2>Quantity: <%= p.cartItem.quantity %></h2>
+                            <h2>Subtotal: $<%= (p.price * p.cartItem.quantity).toFixed(2) %></h2>
                             <form action="/cart-delete-item" method="POST">
                                 <input type="hidden" value="<%= p.id %>" name="productId">
                                 <button class="btn danger" type="submit">Delete</button>
@@ -18,6 +20,55 @@
                         </li>
                     <% }) %>
                 </ul>
+                <hr>
+                
+                <!-- Coupon Section -->
+                <div class="coupon-section">
+                    <% if (couponMessage) { %>
+                        <div class="message success"><%= couponMessage %></div>
+                    <% } %>
+                    <% if (couponError) { %>
+                        <div class="message error"><%= couponError %></div>
+                    <% } %>
+                    
+                    <% if (appliedCoupon) { %>
+                        <div class="coupon-applied">
+                            <p>Applied Coupon: <strong><%= appliedCoupon.code %></strong></p>
+                            <form action="/remove-coupon" method="POST" style="display: inline;">
+                                <button type="submit" class="btn">Remove Coupon</button>
+                            </form>
+                        </div>
+                    <% } else { %>
+                        <form action="/apply-coupon" method="POST" class="coupon-form">
+                            <div class="form-control">
+                                <label for="couponCode">Have a coupon code?</label>
+                                <input type="text" id="couponCode" name="couponCode" placeholder="Enter coupon code">
+                            </div>
+                            <button type="submit" class="btn">Apply Coupon</button>
+                        </form>
+                    <% } %>
+                </div>
+                
+                <!-- Order Summary -->
+                <div class="order-summary">
+                    <h2>Order Summary</h2>
+                    <div class="summary-line">
+                        <span>Subtotal:</span>
+                        <span>$<%= subtotal %></span>
+                    </div>
+                    <% if (appliedCoupon && parseFloat(discount) > 0) { %>
+                        <div class="summary-line discount">
+                            <span>Discount (<%= appliedCoupon.discountType === 'percentage' ? appliedCoupon.discountValue + '%' : '$' + appliedCoupon.discountValue %>):</span>
+                            <span>-$<%= discount %></span>
+                        </div>
+                    <% } %>
+                    <hr>
+                    <div class="summary-line total">
+                        <span><strong>Total:</strong></span>
+                        <span><strong>$<%= total %></strong></span>
+                    </div>
+                </div>
+                
                 <hr>
                 <div class="centered">
                     <form action="/create-order" method="POST">

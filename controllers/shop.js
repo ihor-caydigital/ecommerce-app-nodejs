@@ -1,5 +1,6 @@
 const Product = require("../models/product");
 const Cart = require("../models/cart");
+const Coupon = require("../models/coupon");
 
 const ERROR_PREFIX = "In shop controller, ";
 
@@ -56,16 +57,51 @@ exports.getIndex = (req, res, next) => {
 };
 
 exports.getCart = (req, res, next) => {
-  req.user.getCart()
+  let fetchedCart;
+  let appliedCoupon = null;
+  
+  req.user.getCart({ include: [{ model: Coupon, as: 'appliedCoupon' }] })
     .then(cart => {
-      return cart.getProducts()
-        .then(products => {
-          res.render("shop/cart", {
-            pageTitle: "Cart",
-            path: "/shop/cart",
-            products: products,
-          });
-        })
+      fetchedCart = cart;
+      appliedCoupon = cart.appliedCoupon;
+      return cart.getProducts();
+    })
+    .then(products => {
+      // Calculate subtotal
+      const subtotal = products.reduce((sum, p) => {
+        return sum + (p.price * p.cartItem.quantity);
+      }, 0);
+      
+      // Calculate discount
+      let discount = 0;
+      if (appliedCoupon) {
+        if (appliedCoupon.discountType === 'percentage') {
+          discount = (subtotal * appliedCoupon.discountValue) / 100;
+        } else if (appliedCoupon.discountType === 'fixed') {
+          discount = appliedCoupon.discountValue;
+        }
+      }
+      
+      // Calculate total
+      const total = Math.max(0, subtotal - discount);
+      
+      res.render("shop/cart", {
+        pageTitle: "Cart",
+        path: "/shop/cart",
+        products: products,
+        subtotal: subtotal.toFixed(2),
+        discount: discount.toFixed(2),
+        total: total.toFixed(2),
+        appliedCoupon: appliedCoupon,
+        couponMessage: req.session?.couponMessage || null,
+        couponError: req.session?.couponError || null
+      });
+      
+      // Clear session messages
+      if (req.session) {
+        req.session.couponMessage = null;
+        req.session.couponError = null;
+      }
     })
     .catch(error => { console.log('Error in shop controller, getCart {}', error) });
 };
@@ -162,5 +198,84 @@ exports.postOrder = (req, res, next) => {
     .catch(err => console.log(err));
 };
 
+exports.postApplyCoupon = (req, res, next) => {
+  const couponCode = req.body.couponCode;
+  
+  if (!couponCode || couponCode.trim() === '') {
+    if (req.session) {
+      req.session.couponError = 'Please enter a coupon code';
+    }
+    return res.redirect('/cart');
+  }
+  
+  Coupon.findOne({ where: { code: couponCode.toUpperCase() } })
+    .then(coupon => {
+      if (!coupon) {
+        if (req.session) {
+          req.session.couponError = 'Invalid coupon code';
+        }
+        return res.redirect('/cart');
+      }
+      
+      if (!coupon.isActive) {
+        if (req.session) {
+          req.session.couponError = 'This coupon is no longer active';
+        }
+        return res.redirect('/cart');
+      }
+      
+      if (coupon.expiryDate && new Date(coupon.expiryDate) < new Date()) {
+        if (req.session) {
+          req.session.couponError = 'This coupon has expired';
+        }
+        return res.redirect('/cart');
+      }
+      
+      if (coupon.usageLimit && coupon.usageCount >= coupon.usageLimit) {
+        if (req.session) {
+          req.session.couponError = 'This coupon has reached its usage limit';
+        }
+        return res.redirect('/cart');
+      }
+      
+      // Apply coupon to cart
+      return req.user.getCart()
+        .then(cart => {
+          cart.appliedCouponId = coupon.id;
+          return cart.save();
+        })
+        .then(() => {
+          if (req.session) {
+            req.session.couponMessage = `Coupon "${coupon.code}" applied successfully!`;
+          }
+          res.redirect('/cart');
+        });
+    })
+    .catch(error => {
+      console.log('Error in shop controller, postApplyCoupon {}', error);
+      if (req.session) {
+        req.session.couponError = 'An error occurred while applying the coupon';
+      }
+      res.redirect('/cart');
+    });
+};
+
+exports.postRemoveCoupon = (req, res, next) => {
+  req.user.getCart()
+    .then(cart => {
+      cart.appliedCouponId = null;
+      return cart.save();
+    })
+    .then(() => {
+      if (req.session) {
+        req.session.couponMessage = 'Coupon removed successfully';
+      }
+      res.redirect('/cart');
+    })
+    .catch(error => {
+      console.log('Error in shop controller, postRemoveCoupon {}', error);
+      res.redirect('/cart');
+    });
+};
 
 

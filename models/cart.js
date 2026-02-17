@@ -7,6 +7,10 @@ const Cart = sequelize.define('cart', {
     autoIncrement: true,
     allowNull: false,
     primaryKey: true
+  },
+  appliedCouponId: {
+    type: Sequelize.INTEGER,
+    allowNull: true
   }
 })
 

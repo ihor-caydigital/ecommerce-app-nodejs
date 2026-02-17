@@ -10,12 +10,14 @@ const Cart = require("./models/cart");
 const CartItem = require("./models/cart-item");
 const Order = require("./models/order");
 const OrderItem = require("./models/order-item");
+const Coupon = require("./models/coupon");
 // const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
 
 const express = require("express");
 const bodyParser = require("body-parser");
+const session = require("express-session");
 
 const app = express();
 
@@ -34,6 +36,12 @@ app.use(morgan('combined', {stream: accessLogStream}));
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'my-secret-key-for-sessions',
+  resave: false,
+  saveUninitialized: false
+}));
 
 app.use((req, res, next) => {
   User.findByPk(1)
@@ -68,6 +76,9 @@ Order.belongsTo(User);
 User.hasMany(Order);
 
 Order.belongsToMany(Product, {through: OrderItem})
+
+// Cart can have one coupon applied
+Cart.belongsTo(Coupon, { foreignKey: 'appliedCouponId', as: 'appliedCoupon' })
 
 sequelize
   // .sync({ force: true })
