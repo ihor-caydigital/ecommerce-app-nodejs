@@ -253,6 +253,7 @@ exports.postOrder = (req, res, next) => {
 exports.postApplyCoupon = (req, res, next) => {
   const couponCode = req.body.couponCode;
   
+  // Input validation
   if (!couponCode || couponCode.trim() === '') {
     if (req.session) {
       req.session.couponError = 'Please enter a coupon code';
@@ -260,7 +261,17 @@ exports.postApplyCoupon = (req, res, next) => {
     return res.redirect('/cart');
   }
   
-  Coupon.findOne({ where: { code: couponCode.toUpperCase() } })
+  // Sanitize input: allow only alphanumeric characters and hyphens
+  const sanitizedCode = couponCode.trim().replace(/[^a-zA-Z0-9-]/g, '').toUpperCase();
+  
+  if (sanitizedCode === '') {
+    if (req.session) {
+      req.session.couponError = 'Invalid coupon code format';
+    }
+    return res.redirect('/cart');
+  }
+  
+  Coupon.findOne({ where: { code: sanitizedCode } })
     .then(coupon => {
       if (!coupon) {
         if (req.session) {

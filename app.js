@@ -46,7 +46,12 @@ if (!process.env.SESSION_SECRET && process.env.NODE_ENV === 'production') {
 app.use(session({
   secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+    httpOnly: true, // Prevent XSS attacks
+    maxAge: 1000 * 60 * 60 * 24 // 24 hours
+  }
 }));
 
 app.use((req, res, next) => {
