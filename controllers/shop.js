@@ -102,7 +102,7 @@ exports.getCart = (req, res, next) => {
               path: "/shop/cart",
               products: products,
               subtotal: subtotal.toFixed(2),
-              discount: 0,
+              discount: '0.00',
               total: subtotal.toFixed(2),
               appliedCoupon: null,
               couponError: null
@@ -212,27 +212,30 @@ exports.postOrder = (req, res, next) => {
 exports.postApplyCoupon = (req, res, next) => {
   const couponCode = req.body.couponCode;
   
+  // Helper function to render cart with error
+  const renderCartWithError = (cart, errorMessage) => {
+    return cart.getProducts()
+      .then(products => {
+        const subtotal = products.reduce((sum, p) => {
+          return sum + (p.price * p.cartItem.quantity);
+        }, 0);
+        
+        res.render("shop/cart", {
+          pageTitle: "Cart",
+          path: "/shop/cart",
+          products: products,
+          subtotal: subtotal.toFixed(2),
+          discount: '0.00',
+          total: subtotal.toFixed(2),
+          appliedCoupon: null,
+          couponError: errorMessage
+        });
+      });
+  };
+
   if (!couponCode) {
     return req.user.getCart()
-      .then(cart => {
-        return cart.getProducts()
-          .then(products => {
-            const subtotal = products.reduce((sum, p) => {
-              return sum + (p.price * p.cartItem.quantity);
-            }, 0);
-            
-            res.render("shop/cart", {
-              pageTitle: "Cart",
-              path: "/shop/cart",
-              products: products,
-              subtotal: subtotal.toFixed(2),
-              discount: 0,
-              total: subtotal.toFixed(2),
-              appliedCoupon: null,
-              couponError: "Please enter a coupon code"
-            });
-          });
-      })
+      .then(cart => renderCartWithError(cart, "Please enter a coupon code"))
       .catch(error => console.log(error));
   }
 
@@ -240,71 +243,17 @@ exports.postApplyCoupon = (req, res, next) => {
     .then(coupon => {
       if (!coupon) {
         return req.user.getCart()
-          .then(cart => {
-            return cart.getProducts()
-              .then(products => {
-                const subtotal = products.reduce((sum, p) => {
-                  return sum + (p.price * p.cartItem.quantity);
-                }, 0);
-                
-                res.render("shop/cart", {
-                  pageTitle: "Cart",
-                  path: "/shop/cart",
-                  products: products,
-                  subtotal: subtotal.toFixed(2),
-                  discount: 0,
-                  total: subtotal.toFixed(2),
-                  appliedCoupon: null,
-                  couponError: "Invalid coupon code"
-                });
-              });
-          });
+          .then(cart => renderCartWithError(cart, "Invalid coupon code"));
       }
 
       if (!coupon.isActive) {
         return req.user.getCart()
-          .then(cart => {
-            return cart.getProducts()
-              .then(products => {
-                const subtotal = products.reduce((sum, p) => {
-                  return sum + (p.price * p.cartItem.quantity);
-                }, 0);
-                
-                res.render("shop/cart", {
-                  pageTitle: "Cart",
-                  path: "/shop/cart",
-                  products: products,
-                  subtotal: subtotal.toFixed(2),
-                  discount: 0,
-                  total: subtotal.toFixed(2),
-                  appliedCoupon: null,
-                  couponError: "This coupon is no longer active"
-                });
-              });
-          });
+          .then(cart => renderCartWithError(cart, "This coupon is no longer active"));
       }
 
       if (coupon.expirationDate && new Date(coupon.expirationDate) < new Date()) {
         return req.user.getCart()
-          .then(cart => {
-            return cart.getProducts()
-              .then(products => {
-                const subtotal = products.reduce((sum, p) => {
-                  return sum + (p.price * p.cartItem.quantity);
-                }, 0);
-                
-                res.render("shop/cart", {
-                  pageTitle: "Cart",
-                  path: "/shop/cart",
-                  products: products,
-                  subtotal: subtotal.toFixed(2),
-                  discount: 0,
-                  total: subtotal.toFixed(2),
-                  appliedCoupon: null,
-                  couponError: "This coupon has expired"
-                });
-              });
-          });
+          .then(cart => renderCartWithError(cart, "This coupon has expired"));
       }
 
       // Apply coupon
