@@ -170,15 +170,40 @@ exports.getOrders = (req, res, next) => {
 
 exports.postOrder = (req, res, next) => {
   let fetchedCart;
+  let appliedCoupon = null;
+  let subtotal = 0;
+  let discountAmount = 0;
+  
   req.user
-    .getCart()
+    .getCart({ include: [{ model: Coupon, as: 'appliedCoupon' }] })
     .then(cart => {
       fetchedCart = cart;
+      appliedCoupon = cart.appliedCoupon;
       return cart.getProducts();
     })
     .then(products => {
+      // Calculate subtotal
+      subtotal = products.reduce((sum, p) => {
+        return sum + (p.price * p.cartItem.quantity);
+      }, 0);
+      
+      // Calculate discount
+      if (appliedCoupon) {
+        if (appliedCoupon.discountType === 'percentage') {
+          discountAmount = (subtotal * appliedCoupon.discountValue) / 100;
+        } else if (appliedCoupon.discountType === 'fixed') {
+          discountAmount = appliedCoupon.discountValue;
+        }
+      }
+      
+      const totalAmount = Math.max(0, subtotal - discountAmount);
+      
       return req.user
-        .createOrder()
+        .createOrder({
+          couponCode: appliedCoupon ? appliedCoupon.code : null,
+          discountAmount: discountAmount,
+          totalAmount: totalAmount
+        })
         .then(order => {
           return order.addProducts(
             products.map(product => {
@@ -187,10 +212,23 @@ exports.postOrder = (req, res, next) => {
             })
           );
         })
+        .then(() => {
+          // Increment coupon usage count if a coupon was applied
+          if (appliedCoupon) {
+            appliedCoupon.usageCount += 1;
+            return appliedCoupon.save();
+          }
+        })
         .catch(err => console.log(err));
     })
     .then(result => {
+      // Clear cart items and coupon
       return fetchedCart.setProducts(null);
+    })
+    .then(result => {
+      // Clear applied coupon from cart
+      fetchedCart.appliedCouponId = null;
+      return fetchedCart.save();
     })
     .then(result => {
       res.redirect('/orders');
